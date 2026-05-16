@@ -7,6 +7,8 @@ include(../common.cmake)
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 
+setup_qcoro(COMPONENTS Core)
+
 include(../../common/workingdirectory/workingdirectory.cmake)
 
 include(gui/gui.cmake)
@@ -34,8 +36,11 @@ else()
     endif()
 endif()
 
+target_include_directories(Prompter PRIVATE ../../common)
+
 target_link_libraries(Prompter PRIVATE
     Qt${QT_VERSION_MAJOR}::Widgets
+    QCoro::Core
     -Wl,--whole-archive PrompterLib -Wl,--no-whole-archive)
 
 set_target_properties(Prompter PROPERTIES

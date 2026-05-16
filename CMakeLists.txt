@@ -20,3 +20,6 @@ add_dependencies(Prompter
 add_dependencies(Test_Prompter_Placeholder
     PrompterLib
 )
+add_dependencies(Test_CLI
+    PrompterLib
+)

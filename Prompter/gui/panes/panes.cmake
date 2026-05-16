@@ -8,4 +8,7 @@ set(PANES_FILES
     ${CMAKE_CURRENT_LIST_DIR}/PanePromptVideo.cpp
     ${CMAKE_CURRENT_LIST_DIR}/PanePromptVideo.h
     ${CMAKE_CURRENT_LIST_DIR}/PanePromptVideo.ui
+    ${CMAKE_CURRENT_LIST_DIR}/PaneSettings.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/PaneSettings.h
+    ${CMAKE_CURRENT_LIST_DIR}/PaneSettings.ui
 )
