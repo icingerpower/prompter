@@ -1,0 +1,11 @@
+set(PANES_FILES
+    ${CMAKE_CURRENT_LIST_DIR}/PanePrompt.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/PanePrompt.h
+    ${CMAKE_CURRENT_LIST_DIR}/PanePrompt.ui
+    ${CMAKE_CURRENT_LIST_DIR}/PanePromptSelfAssess.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/PanePromptSelfAssess.h
+    ${CMAKE_CURRENT_LIST_DIR}/PanePromptSelfAssess.ui
+    ${CMAKE_CURRENT_LIST_DIR}/PanePromptVideo.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/PanePromptVideo.h
+    ${CMAKE_CURRENT_LIST_DIR}/PanePromptVideo.ui
+)

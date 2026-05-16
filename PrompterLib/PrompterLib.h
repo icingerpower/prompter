@@ -1,0 +1,4 @@
+#ifndef PROMPTERLIB_H
+#define PROMPTERLIB_H
+
+#endif // PROMPTERLIB_H
