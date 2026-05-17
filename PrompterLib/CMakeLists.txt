@@ -14,6 +14,8 @@ include(../../common/aicli/aicli.cmake)
 add_library(PrompterLib STATIC
     PrompterLib.h
     PrompterLib.cpp
+    ConfigManager.h
+    ConfigManager.cpp
     ${AICLI_FILES}
 )
 

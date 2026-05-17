@@ -23,3 +23,6 @@ add_dependencies(Test_Prompter_Placeholder
 add_dependencies(Test_CLI
     PrompterLib
 )
+add_dependencies(Test_ConfigManager
+    PrompterLib
+)

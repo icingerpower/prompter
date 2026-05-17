@@ -25,3 +25,10 @@ target_link_libraries(Test_CLI PRIVATE
     QCoro::Core
     -Wl,--whole-archive PrompterLib -Wl,--no-whole-archive)
 target_include_directories(Test_CLI PRIVATE ../PrompterLib ../../common)
+
+add_executable(Test_ConfigManager test_config_manager.cpp)
+add_test(NAME Test_ConfigManager COMMAND Test_ConfigManager)
+target_link_libraries(Test_ConfigManager PRIVATE
+    Qt${QT_VERSION_MAJOR}::Test
+    -Wl,--whole-archive PrompterLib -Wl,--no-whole-archive)
+target_include_directories(Test_ConfigManager PRIVATE ../PrompterLib ../../common)
