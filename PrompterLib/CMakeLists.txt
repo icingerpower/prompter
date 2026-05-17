@@ -16,6 +16,8 @@ add_library(PrompterLib STATIC
     PrompterLib.cpp
     ConfigManager.h
     ConfigManager.cpp
+    PromptEngineer.h
+    PromptEngineer.cpp
     ${AICLI_FILES}
 )
 

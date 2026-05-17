@@ -1,9 +1,19 @@
 #include "PanePrompt.h"
 #include "ui_PanePrompt.h"
 
+#include <QDesktopServices>
+#include <QFile>
+#include <QFileDialog>
+#include <QFileInfo>
+#include <QFileSystemModel>
+#include <QMessageBox>
 #include <QSettings>
+#include <QUrl>
 
 #include "ConfigManager.h"
+#include "PromptEngineer.h"
+#include "aicli/AvailableCliList.h"
+#include "aicli/AvailableCliTable.h"
 #include "workingdirectory/WorkingDirectoryManager.h"
 
 PanePrompt::PanePrompt(QWidget *parent)
@@ -11,11 +21,45 @@ PanePrompt::PanePrompt(QWidget *parent)
     , ui(new Ui::PanePrompt)
 {
     ui->setupUi(this);
+    ui->progressBar->hide();
 
     m_configManager = new ConfigManager(
         WorkingDirectoryManager::instance()->workingDir(),
         QStringLiteral("Prompt"),
         this);
+
+    m_cliTable = new AvailableCliTable(this);
+    m_cliList  = new AvailableCliList(m_cliTable, this);
+    ui->comboBoxCli->setModel(m_cliList);
+
+    m_fsModel = new QFileSystemModel(this);
+    m_fsModel->setFilter(QDir::Files | QDir::NoDotAndDotDot);
+    ui->treeViewFiles->setModel(m_fsModel);
+    ui->treeViewFiles->setColumnHidden(1, true); // Size
+    ui->treeViewFiles->setColumnHidden(2, true); // Type
+    ui->treeViewFiles->setColumnHidden(3, true); // Date Modified
+    ui->treeViewFiles->header()->hide();
+
+    m_engineer = new PromptEngineer(this);
+    connect(m_engineer, &PromptEngineer::log,
+            ui->textEditLogs, &QTextEdit::append);
+    connect(m_engineer, &PromptEngineer::progressChanged,
+            this, [this](int attempt, int maxAttempts) {
+        ui->progressBar->setMaximum(maxAttempts);
+        ui->progressBar->setValue(attempt);
+    });
+    connect(m_engineer, &PromptEngineer::candidatePromptChanged,
+            ui->textEditPromptCreated, &QTextEdit::setPlainText);
+    connect(m_engineer, &PromptEngineer::candidateReplyChanged,
+            ui->textEditReplyOfPromptCreated, &QTextEdit::setPlainText);
+    connect(m_engineer, &PromptEngineer::finished,
+            this, [this](bool success, const QString &prompt, const QString &) {
+        ui->buttonRun->setText(tr("Run"));
+        ui->progressBar->hide();
+        if (success) {
+            ui->textEditPromptCreated->setPlainText(prompt);
+        }
+    });
 
     ui->listViewConfigs->setModel(m_configManager);
 
@@ -57,6 +101,22 @@ void PanePrompt::_connectSlots()
             &QPushButton::clicked,
             this,
             &PanePrompt::configRemove);
+    connect(ui->buttonAddFile,
+            &QPushButton::clicked,
+            this,
+            &PanePrompt::_addFiles);
+    connect(ui->buttonRemoveFile,
+            &QPushButton::clicked,
+            this,
+            &PanePrompt::_removeFiles);
+    connect(ui->buttonOpenInputFileDir,
+            &QPushButton::clicked,
+            this,
+            &PanePrompt::_openFilesDir);
+    connect(ui->buttonRun,
+            &QPushButton::clicked,
+            this,
+            &PanePrompt::_runOrCancel);
 }
 
 // ---------------------------------------------------------------------------
@@ -143,4 +203,122 @@ void PanePrompt::_loadConfigData(const QString &internalId)
         s.value(QStringLiteral("promptNeededOutput")).toString());
     ui->spinBoxMaxAttempts->setValue(
         s.value(QStringLiteral("maxAttempts"), 1).toInt());
+    _updateFilesDir(internalId);
+}
+
+// ---------------------------------------------------------------------------
+// File management
+// ---------------------------------------------------------------------------
+
+void PanePrompt::_updateFilesDir(const QString &internalId)
+{
+    if (internalId.isEmpty()) {
+        ui->treeViewFiles->setRootIndex({});
+        return;
+    }
+    QDir dir = m_configManager->configDir(internalId);
+    dir.mkpath(QStringLiteral("files"));
+    const QString path = dir.filePath(QStringLiteral("files"));
+    const QModelIndex root = m_fsModel->setRootPath(path);
+    ui->treeViewFiles->setRootIndex(root);
+}
+
+void PanePrompt::_runOrCancel()
+{
+    if (m_engineer->isRunning()) {
+        m_engineer->cancel();
+        ui->buttonRun->setText(tr("Run"));
+        ui->progressBar->hide();
+        ui->textEditLogs->append(tr("— Cancelled by user —"));
+        return;
+    }
+
+    AbstractCli *cli = m_cliList->cliAt(ui->comboBoxCli->currentIndex());
+    if (!cli) {
+        QMessageBox::warning(this, tr("No CLI available"),
+            tr("No available CLI is selected. Wait for availability checks to complete "
+               "or verify that a supported CLI is installed in PATH."));
+        return;
+    }
+
+    const QString promptInput = ui->textEditPromptInput->toPlainText().trimmed();
+    if (promptInput.isEmpty()) {
+        QMessageBox::warning(this, tr("Missing input"),
+            tr("Please enter prompt rules in the \"Prompt input\" field."));
+        return;
+    }
+
+    _saveConfigData(m_configManager->currentId());
+
+    ui->toolBox->setCurrentIndex(1); // switch to "Page Output"
+    ui->textEditLogs->clear();
+    ui->textEditPromptCreated->clear();
+    ui->progressBar->setMaximum(ui->spinBoxMaxAttempts->value());
+    ui->progressBar->setValue(0);
+    ui->progressBar->show();
+    ui->buttonRun->setText(tr("Cancel"));
+
+    m_engineer->start(
+        cli,
+        promptInput,
+        ui->textEditPromptInput_2->toPlainText().trimmed(),
+        ui->spinBoxMaxAttempts->value(),
+        m_fsModel->rootPath());
+}
+
+void PanePrompt::_openFilesDir()
+{
+    const QString rootPath = m_fsModel->rootPath();
+    if (!rootPath.isEmpty()) {
+        QDesktopServices::openUrl(QUrl::fromLocalFile(rootPath));
+    }
+}
+
+void PanePrompt::_addFiles()
+{
+    const QString rootPath = m_fsModel->rootPath();
+    if (rootPath.isEmpty()) {
+        return;
+    }
+    const QStringList srcPaths = QFileDialog::getOpenFileNames(
+        this, tr("Add Files"), QString{});
+    if (srcPaths.isEmpty()) {
+        return;
+    }
+    for (const QString &src : srcPaths) {
+        const QString fileName = QFileInfo(src).fileName();
+        const QString dst = QDir(rootPath).filePath(fileName);
+        if (QFile::exists(dst)) {
+            const int ret = QMessageBox::question(
+                this,
+                tr("Replace File"),
+                tr("File \"%1\" already exists. Replace it?").arg(fileName),
+                QMessageBox::Yes | QMessageBox::No);
+            if (ret != QMessageBox::Yes) {
+                continue;
+            }
+            QFile::remove(dst);
+        }
+        QFile::copy(src, dst);
+    }
+}
+
+void PanePrompt::_removeFiles()
+{
+    const QModelIndexList selected =
+        ui->treeViewFiles->selectionModel()->selectedRows();
+    if (selected.isEmpty()) {
+        return;
+    }
+    const int ret = QMessageBox::question(
+        this,
+        tr("Remove Files"),
+        tr("Remove %n file(s)?", "", selected.size()),
+        QMessageBox::Yes | QMessageBox::No);
+    if (ret != QMessageBox::Yes) {
+        return;
+    }
+    for (const QModelIndex &idx : selected) {
+        m_fsModel->remove(idx);
+    }
 }

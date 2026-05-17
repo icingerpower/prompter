@@ -8,7 +8,11 @@ namespace Ui {
 class PanePrompt;
 }
 
+class AvailableCliList;
+class AvailableCliTable;
 class ConfigManager;
+class PromptEngineer;
+class QFileSystemModel;
 
 class PanePrompt : public QWidget
 {
@@ -25,14 +29,23 @@ public slots:
 
 private slots:
     void _onConfigSelectionChanged(const QModelIndex &current, const QModelIndex &previous);
+    void _addFiles();
+    void _removeFiles();
+    void _openFilesDir();
+    void _runOrCancel();
 
 private:
-    Ui::PanePrompt *ui;
-    ConfigManager  *m_configManager = nullptr;
+    Ui::PanePrompt    *ui;
+    ConfigManager     *m_configManager  = nullptr;
+    AvailableCliTable *m_cliTable       = nullptr;
+    AvailableCliList  *m_cliList        = nullptr;
+    QFileSystemModel  *m_fsModel        = nullptr;
+    PromptEngineer    *m_engineer       = nullptr;
 
     void _connectSlots();
     void _saveConfigData(const QString &internalId);
     void _loadConfigData(const QString &internalId);
+    void _updateFilesDir(const QString &internalId);
 };
 
 #endif // PANEPROMPT_H

@@ -165,6 +165,13 @@
                </widget>
               </item>
               <item>
+               <widget class="QPushButton" name="buttonOpenInputFileDir">
+                <property name="text">
+                 <string>Open</string>
+                </property>
+               </widget>
+              </item>
+              <item>
                <spacer name="horizontalSpacer_2">
                 <property name="orientation">
                  <enum>Qt::Orientation::Horizontal</enum>
@@ -209,12 +216,18 @@
          </widget>
         </item>
         <item>
-         <widget class="QSplitter" name="splitter_2">
+         <widget class="QSplitter" name="splitter_4">
           <property name="orientation">
            <enum>Qt::Orientation::Horizontal</enum>
           </property>
           <widget class="QTextEdit" name="textEditLogs"/>
-          <widget class="QTextEdit" name="textEditPromptCreated"/>
+          <widget class="QSplitter" name="splitter_2">
+           <property name="orientation">
+            <enum>Qt::Orientation::Vertical</enum>
+           </property>
+           <widget class="QTextEdit" name="textEditPromptCreated"/>
+           <widget class="QTextEdit" name="textEditReplyOfPromptCreated"/>
+          </widget>
          </widget>
         </item>
        </layout>
