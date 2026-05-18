@@ -6,14 +6,312 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1246</width>
-    <height>800</height>
+    <width>1465</width>
+    <height>1036</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout"/>
+  <layout class="QVBoxLayout" name="verticalLayout_root">
+   <item>
+    <widget class="QSplitter" name="splitterMain">
+     <property name="orientation">
+      <enum>Qt::Orientation::Horizontal</enum>
+     </property>
+     <!-- Left: config list -->
+     <widget class="QWidget" name="widgetLeft">
+      <layout class="QVBoxLayout" name="verticalLayout_left">
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_config">
+         <item>
+          <widget class="QPushButton" name="buttonConfigNew">
+           <property name="text">
+            <string>New</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="buttonConfigDuplicate">
+           <property name="text">
+            <string>Duplicate</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="buttonConfigRemove">
+           <property name="text">
+            <string>Remove</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_config">
+           <property name="orientation">
+            <enum>Qt::Orientation::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QListView" name="listViewConfigs"/>
+       </item>
+      </layout>
+     </widget>
+     <!-- Right: toolbox -->
+     <widget class="QToolBox" name="toolBox">
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <!-- ── Input page ─────────────────────────────────────── -->
+      <widget class="QWidget" name="pageInput">
+       <property name="geometry">
+        <rect>
+         <x>0</x>
+         <y>0</y>
+         <width>900</width>
+         <height>960</height>
+        </rect>
+       </property>
+       <attribute name="label">
+        <string>Input</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_input">
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_run">
+          <item>
+           <widget class="QLabel" name="labelMaxAttempts">
+            <property name="text">
+             <string>Max attempts</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QSpinBox" name="spinBoxMaxAttempts">
+            <property name="minimum">
+             <number>1</number>
+            </property>
+            <property name="value">
+             <number>3</number>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QComboBox" name="comboBoxCli"/>
+          </item>
+          <item>
+           <widget class="QPushButton" name="buttonRun">
+            <property name="text">
+             <string>Run</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_run">
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QSplitter" name="splitterInput">
+          <property name="orientation">
+           <enum>Qt::Orientation::Vertical</enum>
+          </property>
+          <widget class="QGroupBox" name="groupBoxPromptInput">
+           <property name="title">
+            <string>Prompt input</string>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_promptInput">
+            <item>
+             <widget class="QTextEdit" name="textEditPromptInput"/>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QGroupBox" name="groupBoxAssessment">
+           <property name="title">
+            <string>Assessment criteria</string>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_assessment">
+            <item>
+             <widget class="QTextEdit" name="textEditAssessmentCriteria"/>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QGroupBox" name="groupBoxFiles">
+           <property name="title">
+            <string>Input files</string>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_files">
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_files">
+              <item>
+               <widget class="QPushButton" name="buttonAddFile">
+                <property name="text">
+                 <string>Add</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="buttonRemoveFile">
+                <property name="text">
+                 <string>Remove</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="buttonOpenInputFileDir">
+                <property name="text">
+                 <string>Open</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer_files">
+                <property name="orientation">
+                 <enum>Qt::Orientation::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <widget class="QTreeView" name="treeViewFiles"/>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <!-- ── Output page ────────────────────────────────────── -->
+      <widget class="QWidget" name="pageOutput">
+       <property name="geometry">
+        <rect>
+         <x>0</x>
+         <y>0</y>
+         <width>900</width>
+         <height>960</height>
+        </rect>
+       </property>
+       <attribute name="label">
+        <string>Output</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_output">
+        <item>
+         <widget class="QProgressBar" name="progressBar">
+          <property name="value">
+           <number>0</number>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="labelRunStatus">
+          <property name="text">
+           <string/>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignmentFlag::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QSplitter" name="splitterOutput">
+          <property name="orientation">
+           <enum>Qt::Orientation::Vertical</enum>
+          </property>
+          <!-- Results table -->
+          <widget class="QTableWidget" name="tableWidgetResults">
+           <property name="selectionMode">
+            <enum>QAbstractItemView::SelectionMode::SingleSelection</enum>
+           </property>
+           <property name="selectionBehavior">
+            <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
+           </property>
+           <property name="sortingEnabled">
+            <bool>false</bool>
+           </property>
+           <column>
+            <property name="text">
+             <string>Prompt #</string>
+            </property>
+           </column>
+           <column>
+            <property name="text">
+             <string>Score</string>
+            </property>
+           </column>
+          </widget>
+          <!-- Selected prompt + reply -->
+          <widget class="QSplitter" name="splitterDetail">
+           <property name="orientation">
+            <enum>Qt::Orientation::Horizontal</enum>
+           </property>
+           <widget class="QGroupBox" name="groupBoxSelectedPrompt">
+            <property name="title">
+             <string>Selected prompt</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_selPrompt">
+             <item>
+              <widget class="QTextEdit" name="textEditSelectedPrompt">
+               <property name="readOnly">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+           <widget class="QGroupBox" name="groupBoxSelectedReply">
+            <property name="title">
+             <string>Selected reply</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayout_selReply">
+             <item>
+              <widget class="QTextEdit" name="textEditSelectedReply">
+               <property name="readOnly">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </widget>
+          </widget>
+         </widget>
+        </item>
+        <item>
+         <widget class="QTextEdit" name="textEditLogs">
+          <property name="readOnly">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </widget>
+   </item>
+  </layout>
  </widget>
  <resources/>
  <connections/>

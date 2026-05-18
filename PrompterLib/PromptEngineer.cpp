@@ -136,9 +136,10 @@ QCoro::Task<void> PromptEngineer::_doRun(
             if (done()) co_return;
 
             const Assessment a = _parseAssessment(assessResult.output);
-            log(QStringLiteral("  │  Satisfies: %1  |  General: %2  |  %3")
+            log(QStringLiteral("  │  Satisfies: %1  |  General: %2%3  |  %4")
                 .arg(a.satisfies ? "YES" : "NO")
                 .arg(a.isGeneral ? "YES" : "NO")
+                .arg(a.isGeneral ? QString{} : QStringLiteral(" (CHEATED)"))
                 .arg(a.explanation));
 
             if (a.satisfies && a.isGeneral) {
@@ -279,21 +280,30 @@ QString PromptEngineer::_buildAssessorPrompt(const QString &candidatePrompt,
                                                const QString &neededOutput)
 {
     return QStringLiteral(
-        "You are a strict evaluator. Assess whether an AI output satisfies specific criteria.\n\n"
+        "You are a strict evaluator. Assess whether an AI output satisfies specific criteria "
+        "AND whether the prompt that produced it is genuinely general.\n\n"
         "OUTPUT CRITERIA (what the response must contain or satisfy):\n%1\n\n"
         "PROMPT THAT WAS EXECUTED:\n%2\n\n"
         "AI RESPONSE RECEIVED:\n%3\n\n"
-        "Evaluate:\n"
-        "1. Does the response satisfy the output criteria?\n"
-        "2. Is the prompt GENERAL? (A prompt 'cheats' if it directly quotes or names "
-        "the specific items from the criteria — it must get the result naturally.)\n\n"
+        "Evaluate TWO things:\n\n"
+        "1. Does the response satisfy the output criteria?\n\n"
+        "2. Is the prompt GENUINELY GENERAL?\n"
+        "A prompt FAILS this check (answer NO) if it cheats in EITHER of these ways:\n"
+        "  a) DIRECT NAMING: it explicitly quotes or names the specific required items.\n"
+        "  b) DESCRIPTIVE FINGERPRINTING: it describes the required items so specifically\n"
+        "     (physical mechanism, geometry, optical technology, number of faces/sides,\n"
+        "     material composition, specific regulatory sub-clause, etc.) that only those\n"
+        "     exact items could match — even without using their commercial names.\n"
+        "A prompt PASSES (answer YES) only if it is a neutral, topic-level question that a\n"
+        "domain expert would naturally answer by mentioning those items — without being\n"
+        "steered toward them by the prompt wording.\n\n"
         "Reply EXACTLY in this format (one line each, no extra text before or after):\n"
         "SATISFIES_REQUIREMENTS: YES or NO\n"
         "PROMPT_IS_GENERAL: YES or NO\n"
-        "EXPLANATION: [one concise sentence]")
+        "EXPLANATION: [one concise sentence covering both checks]")
         .arg(neededOutput)
         .arg(candidatePrompt)
-        .arg(runnerOutput.left(4000)); // cap to avoid hitting context limits
+        .arg(runnerOutput.left(4000));
 }
 
 // ---------------------------------------------------------------------------

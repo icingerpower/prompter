@@ -1,6 +1,7 @@
 #include "PanePrompt.h"
 #include "ui_PanePrompt.h"
 
+#include <QDateTime>
 #include <QDesktopServices>
 #include <QFile>
 #include <QFileDialog>
@@ -43,6 +44,8 @@ PanePrompt::PanePrompt(QWidget *parent)
     m_engineer = new PromptEngineer(this);
     connect(m_engineer, &PromptEngineer::log,
             ui->textEditLogs, &QTextEdit::append);
+    connect(m_engineer, &PromptEngineer::log,
+            this, &PanePrompt::_writeToLogFile);
     connect(m_engineer, &PromptEngineer::progressChanged,
             this, [this](int attempt, int maxAttempts) {
         ui->progressBar->setMaximum(maxAttempts);
@@ -58,7 +61,14 @@ PanePrompt::PanePrompt(QWidget *parent)
         ui->progressBar->hide();
         if (success) {
             ui->textEditPromptCreated->setPlainText(prompt);
+            ui->labelRunStatus->setText(tr("✓ Prompt found!"));
+            ui->labelRunStatus->setStyleSheet(QStringLiteral("color: green; font-weight: bold;"));
+        } else {
+            ui->labelRunStatus->setText(tr("✗ No valid prompt found."));
+            ui->labelRunStatus->setStyleSheet(QStringLiteral("color: red; font-weight: bold;"));
         }
+        ui->labelRunStatus->show();
+        _closeLogFile();
     });
 
     ui->listViewConfigs->setModel(m_configManager);
@@ -82,8 +92,8 @@ PanePrompt::PanePrompt(QWidget *parent)
 
 PanePrompt::~PanePrompt()
 {
-    // Save current data before the pane is destroyed.
     _saveConfigData(m_configManager->currentId());
+    _closeLogFile();
     delete ui;
 }
 
@@ -230,6 +240,10 @@ void PanePrompt::_runOrCancel()
         ui->buttonRun->setText(tr("Run"));
         ui->progressBar->hide();
         ui->textEditLogs->append(tr("— Cancelled by user —"));
+        ui->labelRunStatus->setText(tr("Cancelled."));
+        ui->labelRunStatus->setStyleSheet(QStringLiteral("color: gray; font-weight: bold;"));
+        ui->labelRunStatus->show();
+        _closeLogFile();
         return;
     }
 
@@ -251,6 +265,7 @@ void PanePrompt::_runOrCancel()
     _saveConfigData(m_configManager->currentId());
 
     ui->toolBox->setCurrentIndex(1); // switch to "Page Output"
+    ui->labelRunStatus->hide();
     ui->textEditLogs->clear();
     ui->textEditPromptCreated->clear();
     ui->progressBar->setMaximum(ui->spinBoxMaxAttempts->value());
@@ -258,12 +273,77 @@ void PanePrompt::_runOrCancel()
     ui->progressBar->show();
     ui->buttonRun->setText(tr("Cancel"));
 
+    const QString neededOutput = ui->textEditPromptInput_2->toPlainText().trimmed();
+    _openLogFile(cli->getName(), promptInput, neededOutput, ui->spinBoxMaxAttempts->value());
+
     m_engineer->start(
         cli,
         promptInput,
-        ui->textEditPromptInput_2->toPlainText().trimmed(),
+        neededOutput,
         ui->spinBoxMaxAttempts->value(),
         m_fsModel->rootPath());
+}
+
+// ---------------------------------------------------------------------------
+// Log file
+// ---------------------------------------------------------------------------
+
+void PanePrompt::_openLogFile(const QString &cliName, const QString &promptInput,
+                               const QString &neededOutput, int maxAttempts)
+{
+    _closeLogFile();
+
+    const QString logsDir =
+        m_configManager->configDir(m_configManager->currentId()).filePath(QStringLiteral("logs"));
+    QDir().mkpath(logsDir);
+
+    const QString timestamp = QDateTime::currentDateTime().toString(QStringLiteral("yyyyMMdd_HHmmss"));
+    const QString path = QDir(logsDir).filePath(QStringLiteral("run_%1.txt").arg(timestamp));
+
+    m_logFile = new QFile(path);
+    if (!m_logFile->open(QIODevice::WriteOnly | QIODevice::Text)) {
+        delete m_logFile;
+        m_logFile = nullptr;
+        return;
+    }
+
+    const QString header = QStringLiteral(
+        "=== Run started: %1 ===\n"
+        "Pane: Prompt\n"
+        "CLI: %2\n"
+        "Max attempts: %3\n"
+        "--- Prompt input ---\n%4\n"
+        "--- Needed output ---\n%5\n"
+        "===========================================\n\n")
+        .arg(QDateTime::currentDateTime().toString(Qt::ISODate))
+        .arg(cliName)
+        .arg(maxAttempts)
+        .arg(promptInput)
+        .arg(neededOutput);
+    m_logFile->write(header.toUtf8());
+    m_logFile->flush();
+}
+
+void PanePrompt::_writeToLogFile(const QString &msg)
+{
+    if (m_logFile && m_logFile->isOpen()) {
+        m_logFile->write((msg + u'\n').toUtf8());
+        m_logFile->flush();
+    }
+}
+
+void PanePrompt::_closeLogFile()
+{
+    if (m_logFile) {
+        if (m_logFile->isOpen()) {
+            const QString footer = QStringLiteral("\n=== Run ended: %1 ===\n")
+                .arg(QDateTime::currentDateTime().toString(Qt::ISODate));
+            m_logFile->write(footer.toUtf8());
+            m_logFile->close();
+        }
+        delete m_logFile;
+        m_logFile = nullptr;
+    }
 }
 
 void PanePrompt::_openFilesDir()

@@ -216,6 +216,16 @@
          </widget>
         </item>
         <item>
+         <widget class="QLabel" name="labelRunStatus">
+          <property name="text">
+           <string/>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignmentFlag::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="QSplitter" name="splitter_4">
           <property name="orientation">
            <enum>Qt::Orientation::Horizontal</enum>

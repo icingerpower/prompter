@@ -4,6 +4,8 @@
 #include <QModelIndex>
 #include <QWidget>
 
+class QFile;
+
 namespace Ui {
 class PanePrompt;
 }
@@ -29,6 +31,7 @@ public slots:
 
 private slots:
     void _onConfigSelectionChanged(const QModelIndex &current, const QModelIndex &previous);
+    void _writeToLogFile(const QString &msg);
     void _addFiles();
     void _removeFiles();
     void _openFilesDir();
@@ -41,8 +44,12 @@ private:
     AvailableCliList  *m_cliList        = nullptr;
     QFileSystemModel  *m_fsModel        = nullptr;
     PromptEngineer    *m_engineer       = nullptr;
+    QFile             *m_logFile        = nullptr;
 
     void _connectSlots();
+    void _openLogFile(const QString &cliName, const QString &promptInput,
+                      const QString &neededOutput, int maxAttempts);
+    void _closeLogFile();
     void _saveConfigData(const QString &internalId);
     void _loadConfigData(const QString &internalId);
     void _updateFilesDir(const QString &internalId);
